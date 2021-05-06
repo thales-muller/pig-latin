@@ -19,8 +19,10 @@ export class AppComponent implements OnInit {
   }
 
   translate() {
-    this.result += this._helperService.translateToPigLatin(this.text.split(' '));
-    this.text = '';
+    if (this.text) {
+      this.result += this._helperService.translateToPigLatin(this.text.split(' '));
+      this.text = '';
+    }
   }
 
   clearText() {

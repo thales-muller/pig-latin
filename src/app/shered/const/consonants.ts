@@ -1,0 +1,1 @@
+export const CONSONANTS = 'q Q w W r R t T p P s S d D f F g G h H j J k K l L z Z x X c C v V b B n N m M';

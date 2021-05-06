@@ -3,6 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import * as moment_ from 'moment';
+import { AY, YAY } from '../shered/const/complement';
+import { CONSONANTS } from '../shered/const/consonants';
+import { PUNCTUATION } from '../shered/const/punctuation';
 
 const moment = moment_;
 
@@ -11,54 +14,60 @@ const moment = moment_;
 })
 export class HelperService {
 
-  complement: string;
 
-  constructor(private http: HttpClient) {
-    this.complement = 'ay';
-  }
+  constructor() { }
 
   translateToPigLatin(text: string[]): string {
     let phrase: string = '';
 
     text.forEach(word => {
-      phrase += `${this.startTranslateProcess(word)} `;
+      phrase += `${this.translateProcess(word)} `;
     });
 
     return phrase;
   }
 
-  startTranslateProcess(word: string): string {
-    word = this.validationIfIsEmpty(word);
-    const isThereCapitalLatter: boolean = this.checkIfThereCapitalLatter(word);
-    const index = this.getIndexOfTheFirstVowel(word);
-    const prefix = this.getPrefix(word, index);
-    const stem = this.getSteam(word, index);
-
-    const result = stem + prefix + this.complement;
-    if (isThereCapitalLatter) {
-      let formatResult =  result.toLowerCase();
-      return `${formatResult.substr(0,1).toUpperCase()}${formatResult.substr(1,formatResult.length)}` ;
-    } else {
-      return result;
-    }
-
-  }
-
-  validationIfIsEmpty(text: string) {
-    if (text === '') {
+  translateProcess(word: string): string {
+    if (this.validationIfIsEmpty(word)) {
       return '';
-    } else {
-      return text;
+    } else if (this.validationIfIsANumber(word)) {
+      return word;
+    }
+    else {
+
+      const isThereCapitalLatter: boolean = this.checkIfThereIsCapitalLatter(word);
+      const isTherePunctuation: boolean = this.checkIfThereIsPunctuation(word);
+
+      let punctuation = '';
+
+      if (isTherePunctuation) {
+        punctuation = word.substr(word.length - 1, word.length);
+        word = word.substr(0, word.length - 1);
+      }
+
+      const areThereConsonant: boolean = this.checkIfThereAreConsonants(word);
+
+      let index, prefix, stem, result: string;
+      if (areThereConsonant) {
+        index = this.getIndexOfTheFirstVowel(word);
+        prefix = this.getPrefix(word, index);
+        stem = this.getSteam(word, index);
+        result = stem + prefix + AY + punctuation;
+      } else {
+        prefix = '';
+        stem = this.getSteam(word, 0);
+        result = stem + prefix + YAY + punctuation;
+      }
+
+      if (isThereCapitalLatter) {
+        let formatResult = result.toLowerCase();
+        return `${formatResult.substr(0, 1).toUpperCase()}${formatResult.substr(1, formatResult.length)}`;
+      } else {
+        return result;
+      }
     }
   }
 
-  checkIfThereCapitalLatter(word: string): boolean {
-    if (word.substr(0, 1) === word.substr(0, 1).toUpperCase()) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
   getPrefix(word: string, index): string {
     return word.substr(0, index);
@@ -84,9 +93,7 @@ export class HelperService {
     index.push(word.indexOf('y'));
 
     const indexFormated = index.map(i => {
-      if (i < 0) {
-        return i = 10000000000000000000;
-      } else {
+      if (i >= 0) {
         return i;
       }
     });
@@ -98,7 +105,31 @@ export class HelperService {
     }).shift();
   }
 
-  getPunctuation(stem: string): string {
-    return '';
+  validationIfIsEmpty(word: string): boolean {
+    if (word === '') {
+      return true
+    } else {
+      return false;
+    }
+  }
+
+  validationIfIsANumber(word: string): boolean {
+    return /^-?\d+$/.test(word);
+  }
+
+  checkIfThereIsCapitalLatter(word: string): boolean {
+    if (word.substr(0, 1) === word.substr(0, 1).toUpperCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  checkIfThereIsPunctuation(word: string): boolean {
+    return PUNCTUATION.split(' ').some(punctuation => word.includes(punctuation));
+  }
+
+  checkIfThereAreConsonants(word: string): boolean {
+    return CONSONANTS.split(' ').some(consonant => word.includes(consonant));
   }
 }
